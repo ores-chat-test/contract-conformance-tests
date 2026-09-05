@@ -16,3 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - uses: ores-chat-test/.github@45aac3517015fdfe2eee74ac53a6ae7fc397cf04
+      - name: Check independent Rust consumer formatting
+        run: |
+          rustup component add rustfmt
+          rustfmt --edition 2024 --check discovery/consumer.rs
