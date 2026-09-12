@@ -1,0 +1,66 @@
+name: flags-2-env CLI contract
+
+on:
+  pull_request:
+    paths:
+      - '.cli-flags.toml'
+      - '.github/workflows/flags2env-contract.yml'
+  push:
+    branches: [main]
+    paths:
+      - '.cli-flags.toml'
+      - '.github/workflows/flags2env-contract.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Verify exact test head
+        env:
+          EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: flags-2-env/flags-2-env
+          ref: 578cc8f39a2ee0f737c7d5a1387d2f92aaa65d15
+          path: tmp/flags-2-env
+          persist-credentials: false
+      - name: Build pinned flags-2-env CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C tmp/flags-2-env rev-parse HEAD)" = '578cc8f39a2ee0f737c7d5a1387d2f92aaa65d15'
+          make -C tmp/flags-2-env cli
+      - name: Audit contract and prove dotenv isolation
+        shell: bash
+        run: |
+          set -euo pipefail
+          F2E="$PWD/tmp/flags-2-env/build/flags2env"
+          "$F2E" audit .cli-flags.toml
+
+          printf '%s\n' 'CHAT_TEST_MODE=dotenv-must-not-load' > .env
+          unset CHAT_TEST_MODE
+          eval "$("$F2E" export -- chat-contract probe)"
+          test -z "${CHAT_TEST_MODE+x}"
+          test "${CHAT_TEST_COMMAND:-}" = 'probe'
+          test "${CHAT_TEST_COMMAND_PROBE:-}" = 'true'
+
+          eval "$("$F2E" export -- chat-contract probe --mode=explicit --no-json)"
+          test "$CHAT_TEST_MODE" = 'explicit'
+          test "${CHAT_TEST_JSON:-}" = 'false'
+          rm -f .env
+      - name: Preserve repository inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          test ! -e .env
+          git diff --exit-code HEAD
