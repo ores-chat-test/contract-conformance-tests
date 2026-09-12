@@ -1,0 +1,31 @@
+[help]
+url = "https://github.com/ores-chat-test/contract-conformance-tests"
+columns = ["options", "env", "type", "default", "description"]
+
+[env]
+files = []
+
+[parse]
+command_env = "CHAT_TEST_COMMAND"
+positionals_env = "CHAT_TEST_POSITIONALS"
+unknown_options_env = "CHAT_TEST_UNKNOWN_OPTIONS"
+errors_env = "CHAT_TEST_PARSE_ERRORS"
+allow_unknown = false
+
+[flags.json]
+env = "CHAT_TEST_JSON"
+aliases = ["json"]
+type = "bool"
+default = "true"
+help = "Emit JSON evidence; use --no-json for plain evidence."
+
+[commands.probe]
+help = "Exercise the canonical flags-2-env command and dotenv boundary."
+env = "CHAT_TEST_COMMAND_PROBE"
+
+[commands.probe.flags.mode]
+env = "CHAT_TEST_MODE"
+aliases = ["mode"]
+short = "m"
+type = "string"
+help = "Explicit canary mode."
