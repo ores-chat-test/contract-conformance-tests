@@ -26,16 +26,24 @@ jobs:
           set -euo pipefail
           p="${GITHUB_REPOSITORY_OWNER%-test}"; f=0; n=0
           while IFS=$'\t' read -r r b; do
-            if [[ "$r" =~ (interfaces|api|schema|contract|lib-core|infra) ]]; then
-              n=$((n+1))
-              s="$(gh api "repos/$p/$r/commits/$b" --jq .sha)"
-              paths="$(gh api "repos/$p/$r/git/trees/$s?recursive=1" --jq '.tree[].path')"
-              if grep -Eq '(^|/)(\.ores-infra\.toml|\.zpkg\.toml|package\.json|Cargo\.toml|pyproject\.toml|go\.mod|pubspec\.yaml|[^/]+\.tsp|[^/]+\.proto|[^/]+\.wit|openapi[^/]*\.(json|ya?ml)|[^/]*schema[^/]*\.json)$' <<<"$paths"; then
+            [[ "$r" =~ (interfaces|api|schema|contract|lib-core|infra) ]] || continue
+            n=$((n+1))
+            s="$(gh api "repos/$p/$r/commits/$b" --jq .sha)"
+            for marker in .zpkg.toml .ores-infra.toml Cargo.toml package.json pyproject.toml go.mod pubspec.yaml; do
+              if gh api "repos/$p/$r/contents/$marker?ref=$s" >/dev/null 2>&1; then
+                echo "authority: $p/$r@$s -> $marker"
                 f=1
-                break
+                break 2
               fi
+            done
+            paths="$(gh api "repos/$p/$r/git/trees/$s?recursive=1" --jq '.tree[].path')"
+            if grep -Eq '(^|/)([^/]+\.tsp|[^/]+\.proto|[^/]+\.wit|openapi[^/]*\.(json|ya?ml)|[^/]*schema[^/]*\.json)$' <<<"$paths"; then
+              echo "authority: $p/$r@$s -> nested schema/interface"
+              f=1
+              break
             fi
           done </tmp/repos
+          if [[ "$f" -ne 1 ]]; then echo "No current contract/build authority found across $n candidate repositories" >&2; fi
           test "$n" -gt 0
           test "$f" -eq 1
       - name: Test 3 - zed-pkg dependency tip is reachable
