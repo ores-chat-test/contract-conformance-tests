@@ -1,0 +1,20 @@
+name: explicit counterpart current-tip contract system
+on:
+  pull_request:
+    paths: ['.github/workflows/explicit-counterpart-current-tips.yml']
+  push:
+    branches: [main]
+    paths: ['.github/workflows/explicit-counterpart-current-tips.yml']
+  workflow_dispatch: {}
+permissions: {contents: read}
+jobs:
+  current-production-contracts:
+    uses: zed-pkg-test/.github/.github/workflows/reusable-explicit-counterpart-current-tips.yml@28da20bc67b963c084b6498102a153179b68f6c0
+    with:
+      test_owner: ores-chat-test
+      test_owner_id: '322889438'
+      production_owner: ores-chat
+      production_owner_id: '322889268'
+      governance_repository: ores-chat-test/.github
+    secrets:
+      read_token: ${{ secrets.TEST_FLEET_READ_TOKEN || secrets.TEST_FLEET_GITHUB_TOKEN || github.token }}
