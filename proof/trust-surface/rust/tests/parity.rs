@@ -104,11 +104,7 @@ fn schema_literals(schema: &Value, model: &str) -> BTreeMap<String, String> {
 fn surface_enum_matches_both_authored_authorities() {
     let tsp = typespec();
     let schema = schema();
-    let expected = BTreeSet::from([
-        "admin".to_owned(),
-        "public".to_owned(),
-        "user".to_owned(),
-    ]);
+    let expected = BTreeSet::from(["admin".to_owned(), "public".to_owned(), "user".to_owned()]);
     let schema_values = schema["$defs"]["ChatSurface"]["enum"]
         .as_array()
         .expect("ChatSurface enum must exist")
@@ -130,7 +126,10 @@ fn authored_policy_literals_match_exactly() {
         let tsp_policy = typespec_literals(&tsp, model);
         let json_policy = schema_literals(&schema, model);
         assert_eq!(json_policy, tsp_policy, "{model} authority drift");
-        assert_eq!(json_policy.get("protocol").map(String::as_str), Some(PROTOCOL));
+        assert_eq!(
+            json_policy.get("protocol").map(String::as_str),
+            Some(PROTOCOL)
+        );
     }
 }
 
