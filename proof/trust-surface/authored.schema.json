@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.ores.chat/trust_surface/v1/trust_surface.schema.json",
+  "title": "ORES Chat trust-surface contract v1",
+  "description": "Independent JSON Schema authority for route-owned public, customer, and administrator trust requirements. UI selection never supplies authentication facts.",
+  "oneOf": [
+    { "$ref": "#/$defs/PublicChatSurfacePolicy" },
+    { "$ref": "#/$defs/UserChatSurfacePolicy" },
+    { "$ref": "#/$defs/AdminChatSurfacePolicy" }
+  ],
+  "$defs": {
+    "ChatSurface": {
+      "type": "string",
+      "enum": ["public", "user", "admin"]
+    },
+    "PublicChatSurfacePolicy": {
+      "type": "object",
+      "properties": {
+        "protocol": { "type": "string", "const": "ores.chat.trust_surface/v1" },
+        "surface": { "type": "string", "const": "public" }
+      },
+      "required": ["protocol", "surface"],
+      "unevaluatedProperties": false
+    },
+    "UserChatSurfacePolicy": {
+      "type": "object",
+      "properties": {
+        "protocol": { "type": "string", "const": "ores.chat.trust_surface/v1" },
+        "surface": { "type": "string", "const": "user" },
+        "required_realm": { "type": "string", "const": "ores-chat-customer" },
+        "required_token_audience": { "type": "string", "const": "ores-chat-api" }
+      },
+      "required": ["protocol", "surface", "required_realm", "required_token_audience"],
+      "unevaluatedProperties": false
+    },
+    "AdminChatSurfacePolicy": {
+      "type": "object",
+      "properties": {
+        "protocol": { "type": "string", "const": "ores.chat.trust_surface/v1" },
+        "surface": { "type": "string", "const": "admin" },
+        "required_realm": { "type": "string", "const": "ores-chat-admin" },
+        "required_token_audience": { "type": "string", "const": "ores-chat-admin-api" }
+      },
+      "required": ["protocol", "surface", "required_realm", "required_token_audience"],
+      "unevaluatedProperties": false
+    }
+  }
+}
